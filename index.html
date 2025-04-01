@@ -156,6 +156,7 @@
 </head>
 <body>
     <div id="main-content">
+        <h1>S.R.N. XXVII</h1>
         <h1>MACRODATA REFINEMENT</h1>
         <div class="countdown-container">
             <div class="countdown" id="countdown"></div>
@@ -186,7 +187,7 @@
         let currentSequence = [];
         let currentProgress = 0;
         let lastCompletionDate = null;
-        const dailyIncrement = 3.33; // 100% / 30 días ≈ 3.33% por día
+        const dailyIncrement = 5.56; // 100% / 30 días ≈ 3.33% por día
         
         // Almacenamiento local para persistencia
         function loadProgress() {
@@ -293,36 +294,41 @@
         }
         
         function initNumbers() {
-            const numbers = Array.from({ length: 400 }, () => Math.floor(Math.random() * 10));
-            const container = document.getElementById("numbers-container");
-            const sequenceContainer = document.getElementById("sequence");
+        const numbers = Array.from({ length: 400 }, () => Math.floor(Math.random() * 10));
+        const container = document.getElementById("numbers-container");
+        const sequenceContainer = document.getElementById("sequence");
+        
+        container.innerHTML = '';
+        
+        numbers.forEach(num => {
+            let span = document.createElement("span");
+            span.textContent = num;
+            span.classList.add("number");
             
-            container.innerHTML = '';
-            
-            numbers.forEach(num => {
-                let span = document.createElement("span");
-                span.textContent = num;
-                span.classList.add("number");
-                
-                if ([1, 8, 9, 5].includes(num)) {
-                    span.addEventListener("mouseover", () => span.classList.add("highlight"));
-                    span.addEventListener("mouseout", () => span.classList.remove("highlight"));
-                    span.addEventListener("click", () => {
-                        if (currentSequence.length < sequencePattern.length) {
-                            currentSequence.push(num);
-                            sequenceContainer.textContent = currentSequence.join(" → ");
-                            
-                            // Verificar si la secuencia está completa
-                            if (currentSequence.length === sequencePattern.length) {
-                                completeDailyTask();
-                            }
+            if ([1, 8, 9, 5].includes(num)) {
+                span.addEventListener("mouseover", () => span.classList.add("highlight"));
+                span.addEventListener("mouseout", () => span.classList.remove("highlight"));
+                span.addEventListener("click", () => {
+                    // Solo permitir añadir si es el número esperado en la secuencia
+                    const expectedNumber = sequencePattern[currentSequence.length];
+                    if (num === expectedNumber) {
+                        currentSequence.push(num);
+                        sequenceContainer.textContent = currentSequence.join(" → ");
+                        
+                        // Verificar si la secuencia está completa
+                        if (currentSequence.length === sequencePattern.length) {
+                            completeDailyTask();
                         }
-                    });
-                }
-                
-                container.appendChild(span);
-            });
-        }
+                    } else {
+                        showDailyMessage(`No es el número correcto`, true);
+                    }
+                });
+            }
+            
+            container.appendChild(span);
+        });
+    }
+
         
         function restartProcess() {
             currentProgress = 0;
