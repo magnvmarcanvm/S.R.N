@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Severance Data Refinement</title>
+    <title>Refinamiento de Macrodata</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
         
@@ -19,11 +19,13 @@
             box-sizing: border-box;
             text-align: center;
         }
+        
         h1 {
             font-size: 36px;
             color: #ffffff;
             margin-bottom: 10px;
         }
+        
         .countdown-container {
             display: flex;
             align-items: center;
@@ -31,15 +33,18 @@
             margin-bottom: 20px;
             justify-content: center;
         }
+        
         .countdown {
             font-size: 20px;
             color: #00c3ff;
         }
+        
         .progress-wrapper {
             display: flex;
             align-items: center;
             gap: 10px;
         }
+        
         .progress-container {
             width: 150px;
             height: 10px;
@@ -47,16 +52,19 @@
             border-radius: 5px;
             overflow: hidden;
         }
+        
         .progress-bar {
             height: 100%;
             background-color: #00c3ff;
             width: 0%;
-            transition: width 1s linear;
+            transition: width 0.5s ease;
         }
+        
         .percentage {
             font-size: 18px;
             color: #00c3ff;
         }
+        
         .scroll-container {
             flex: 1;
             overflow-y: auto;
@@ -64,6 +72,7 @@
             margin: 20px 0;
             max-height: 50vh;
         }
+        
         .container {
             display: flex;
             flex-wrap: wrap;
@@ -71,6 +80,7 @@
             width: 100%;
             gap: 10px;
         }
+        
         .number {
             font-size: 24px;
             transition: all 0.3s ease;
@@ -78,10 +88,12 @@
             width: 30px;
             text-align: center;
         }
+        
         .highlight {
             color: #0b7583;
             font-size: 28px;
         }
+        
         .sequence-container {
             padding: 15px;
             border: 2px solid #00c3ff;
@@ -93,34 +105,184 @@
             background-color: black;
             margin-top: auto;
         }
+        
+        .daily-message {
+            color: #00ff88;
+            margin-top: 10px;
+            font-size: 16px;
+            min-height: 20px;
+        }
+        
+        .completion-screen {
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.9);
+            z-index: 100;
+            padding: 20px;
+        }
+        
+        .completion-message {
+            font-size: 48px;
+            color: #00ff88;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .restart-btn {
+            background-color: #00c3ff;
+            color: black;
+            border: none;
+            padding: 15px 30px;
+            font-size: 20px;
+            font-family: 'Orbitron', monospace;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+        }
+        
+        .restart-btn:hover {
+            background-color: #00ff88;
+            transform: scale(1.05);
+        }
     </style>
 </head>
 <body>
-    <h1>S.R.N.  XXVII</h1>
-    <h1>MACRODATA REFINEMENT</h1>
-    <div class="countdown-container">
-        <div class="countdown" id="countdown"></div>
-        <div class="progress-wrapper">
-            <div class="progress-container">
-                <div class="progress-bar" id="progress-bar"></div>
+    <div id="main-content">
+        <h1>MACRODATA REFINEMENT</h1>
+        <div class="countdown-container">
+            <div class="countdown" id="countdown"></div>
+            <div class="progress-wrapper">
+                <div class="progress-container">
+                    <div class="progress-bar" id="progress-bar"></div>
+                </div>
+                <div class="percentage" id="percentage">0%</div>
             </div>
-            <div class="percentage" id="percentage">0%</div>
         </div>
+        <div class="daily-message" id="daily-message"></div>
+        <div class="scroll-container">
+            <div class="container" id="numbers-container"></div>
+        </div>
+        <div class="sequence-container" id="sequence"></div>
     </div>
-    <div class="scroll-container">
-        <div class="container"></div>
+    
+    <div class="completion-screen" id="completion-screen">
+        <div class="completion-message">¡REFINEMENT COMPLETED!</div>
+        <div style="font-size: 24px; margin-bottom: 30px; color: #00c3ff;">
+            All data has been successfully processed
+        </div>
+        <button class="restart-btn" id="restart-btn">RESTART PROCESS</button>
     </div>
-    <div class="sequence-container" id="sequence"></div>
+    
     <script>
         const sequencePattern = [1, 9, 8, 5, 8, 8];
         let currentSequence = [];
-
+        let currentProgress = 0;
+        let lastCompletionDate = null;
+        const dailyIncrement = 3.33; // 100% / 30 días ≈ 3.33% por día
+        
+        // Almacenamiento local para persistencia
+        function loadProgress() {
+            const savedProgress = localStorage.getItem('refinementProgress');
+            const savedDate = localStorage.getItem('lastCompletionDate');
+            
+            if (savedProgress) {
+                currentProgress = parseFloat(savedProgress);
+                document.getElementById("progress-bar").style.width = `${currentProgress}%`;
+                document.getElementById("percentage").textContent = `${currentProgress.toFixed(1)}%`;
+            }
+            
+            if (savedDate) {
+                lastCompletionDate = new Date(savedDate);
+            }
+        }
+        
+        function saveProgress() {
+            localStorage.setItem('refinementProgress', currentProgress.toString());
+            if (lastCompletionDate) {
+                localStorage.setItem('lastCompletionDate', lastCompletionDate.toISOString());
+            }
+        }
+        
+        function showDailyMessage(message, isError = false) {
+            const msgElement = document.getElementById("daily-message");
+            msgElement.textContent = message;
+            msgElement.style.color = isError ? '#ff5555' : '#00ff88';
+            
+            setTimeout(() => {
+                msgElement.textContent = '';
+            }, 5000);
+        }
+        
+        function canCompleteToday() {
+            if (!lastCompletionDate) return true;
+            
+            const today = new Date();
+            const lastDate = new Date(lastCompletionDate);
+            
+            return !(
+                today.getDate() === lastDate.getDate() &&
+                today.getMonth() === lastDate.getMonth() &&
+                today.getFullYear() === lastDate.getFullYear()
+            );
+        }
+        
+        function completeDailyTask() {
+            if (!canCompleteToday()) {
+                showDailyMessage("Ya completaste la tarea hoy. Vuelve mañana.", true);
+                return false;
+            }
+            
+            if (currentSequence.length !== sequencePattern.length) {
+                showDailyMessage("Secuencia incorrecta. Inténtalo de nuevo.", true);
+                return false;
+            }
+            
+            for (let i = 0; i < sequencePattern.length; i++) {
+                if (currentSequence[i] !== sequencePattern[i]) {
+                    showDailyMessage("Secuencia incorrecta. Inténtalo de nuevo.", true);
+                    return false;
+                }
+            }
+            
+            // Incrementar progreso
+            currentProgress += dailyIncrement;
+            if (currentProgress > 100) currentProgress = 100;
+            
+            document.getElementById("progress-bar").style.width = `${currentProgress}%`;
+            document.getElementById("percentage").textContent = `${currentProgress.toFixed(1)}%`;
+            
+            lastCompletionDate = new Date();
+            saveProgress();
+            
+            showDailyMessage("¡Tarea diaria completada! +" + dailyIncrement.toFixed(1) + "%");
+            
+            // Reiniciar secuencia
+            currentSequence = [];
+            document.getElementById("sequence").textContent = '';
+            
+            // Verificar si hemos llegado al 100%
+            if (currentProgress >= 100) {
+                setTimeout(() => {
+                    document.getElementById('main-content').style.display = 'none';
+                    document.getElementById('completion-screen').style.display = 'flex';
+                }, 1000);
+            }
+            
+            return true;
+        }
+        
         function updateCountdown() {
             const targetDate = new Date("April 20, 2025 00:00:00").getTime();
-            const startDate = targetDate - (30 * 24 * 60 * 60 * 1000);
             const now = new Date().getTime();
             const timeLeft = targetDate - now;
-            const totalTime = targetDate - startDate;
             
             const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
             const hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
@@ -128,35 +290,69 @@
             const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
             
             document.getElementById("countdown").textContent = `${days}d ${hours}h ${minutes}m ${seconds}s`;
-            
-            const progress = Math.min(100, ((totalTime - timeLeft) / totalTime) * 100);
-            document.getElementById("progress-bar").style.width = `${progress}%`;
-            document.getElementById("percentage").textContent = `${Math.floor(progress)}%`;
         }
-        setInterval(updateCountdown, 1000);
-        updateCountdown();
         
-        const numbers = Array.from({ length: 500 }, () => Math.floor(Math.random() * 10));
-        const container = document.querySelector(".container");
-        const sequenceContainer = document.getElementById("sequence");
-
-        numbers.forEach(num => {
-            let span = document.createElement("span");
-            span.textContent = num;
-            span.classList.add("number");
+        function initNumbers() {
+            const numbers = Array.from({ length: 400 }, () => Math.floor(Math.random() * 10));
+            const container = document.getElementById("numbers-container");
+            const sequenceContainer = document.getElementById("sequence");
             
-            if ([1, 8, 9, 5, 8, 8].includes(num)) {
-                span.addEventListener("mouseover", () => span.classList.add("highlight"));
-                span.addEventListener("mouseout", () => span.classList.remove("highlight"));
-                span.addEventListener("click", () => {
-                    if (num === sequencePattern[currentSequence.length]) {
-                        currentSequence.push(num);
-                        sequenceContainer.textContent = currentSequence.join(" → ");
-                    }
-                });
-            }
+            container.innerHTML = '';
             
-            container.appendChild(span);
+            numbers.forEach(num => {
+                let span = document.createElement("span");
+                span.textContent = num;
+                span.classList.add("number");
+                
+                if ([1, 8, 9, 5].includes(num)) {
+                    span.addEventListener("mouseover", () => span.classList.add("highlight"));
+                    span.addEventListener("mouseout", () => span.classList.remove("highlight"));
+                    span.addEventListener("click", () => {
+                        if (currentSequence.length < sequencePattern.length) {
+                            currentSequence.push(num);
+                            sequenceContainer.textContent = currentSequence.join(" → ");
+                            
+                            // Verificar si la secuencia está completa
+                            if (currentSequence.length === sequencePattern.length) {
+                                completeDailyTask();
+                            }
+                        }
+                    });
+                }
+                
+                container.appendChild(span);
+            });
+        }
+        
+        function restartProcess() {
+            currentProgress = 0;
+            currentSequence = [];
+            lastCompletionDate = null;
+            
+            document.getElementById("progress-bar").style.width = '0%';
+            document.getElementById("percentage").textContent = '0%';
+            document.getElementById("sequence").textContent = '';
+            document.getElementById('main-content').style.display = 'block';
+            document.getElementById('completion-screen').style.display = 'none';
+            
+            localStorage.removeItem('refinementProgress');
+            localStorage.removeItem('lastCompletionDate');
+            
+            initNumbers();
+        }
+        
+        // Inicialización
+        document.addEventListener('DOMContentLoaded', () => {
+            loadProgress();
+            updateCountdown();
+            setInterval(updateCountdown, 1000);
+            initNumbers();
+            document.getElementById('restart-btn').addEventListener('click', restartProcess);
+            
+            // Botón para completar manualmente (solo para pruebas)
+            // document.addEventListener('keypress', (e) => {
+            //     if (e.key === 't') completeDailyTask();
+            // });
         });
     </script>
 </body>
